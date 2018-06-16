@@ -1,0 +1,7 @@
+__pycache__
+.vscode
+.log
+wifi.py
+*.txt
+.spec
+config.py
