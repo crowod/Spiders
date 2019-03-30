@@ -31,7 +31,7 @@ def parse_one_page(html):
             'image': item[1],
             'tile': item[2],
             'actor': item[3].strip()[3:],
-            'time': item[4].strip()[5:]
+            'time': item[4].strip()[5:],
             'score': item[5] + item[6]
         }
 
@@ -55,3 +55,4 @@ if __name__ == '__main__':
     pool.map(main, [i * 10 for i in range(10)])
     pool.close()
     pool.join()
+

@@ -62,7 +62,7 @@ def next_page(title):
                 download_image(url, title)
             next.click()
     except TimeoutException:
-        next_page(page_number)
+        next_page(title)
 
 
 def download_image(url, title):

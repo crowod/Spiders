@@ -75,7 +75,7 @@ def search_and_login(keyword):
         input_password.send_keys(PASSWORD)
         submit.click()
     except TimeoutException:
-        return search(keyword)
+        return search_and_login(keyword)
 
 
 def next_page():
