@@ -11,15 +11,15 @@ from retrying import retry
 from bs4 import BeautifulSoup
 
 MONGO_URL = 'mongodb://localhost:27017/'
-MONGO_DB = 'tmp'
-COLLECTION = 'DianPing'
+MONGO_DB = 'DianPing'
+COLLECTION = '密室'
 
 client = pymongo.MongoClient(MONGO_URL, connect=False)
 db = client[MONGO_DB]
 
 logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    level=logging.WARNING,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s - %(lineno)d')
 
 pp = pprint.PrettyPrinter(indent=4)
 
@@ -57,6 +57,8 @@ class Dianping:
                 self.logger.warning('Can not find css')
         except Exception as e:
             self.logger.warning(e)
+            time.sleep(5)
+            self.get_css(html)
 
     @retry(
         stop_max_attempt_number=10,
@@ -90,7 +92,7 @@ class Dianping:
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
             if '验证码' in response.text:
-                logger.info('Verify')
+                self.logger.info('Verify')
                 time.sleep(5)
                 self.get_page(url)
             else:
@@ -123,7 +125,7 @@ class Dianping:
                             self.offsets[prefix] = result
                 html_ = re.sub(r'\.0px', 'px', html)
                 backgrounds_ = re.findall(
-                    r'\.(.*?)\{background:-(\d+)px -(\d+)px;\}', html_)
+                    r'\.(\S*?)\{background:-(\d+)px -(\d+)px;\}', html_)
                 if backgrounds_:
                     self.backgrounds = {
                         prefix: [x, y]
@@ -164,30 +166,30 @@ class Dianping:
         if not item.select('.review-num b'):
             return ''
         text = item.select('.review-num b')[0].decode()
-        result = self.get_words(text, 0)
+        result = self.get_words(text)
         return result
 
     def get_avgprice(self, item):
         if not item.select('.mean-price b'):
             return ''
         text = item.select('.mean-price b')[0].decode()
-        result = self.get_words(text, 0)
+        result = self.get_words(text)
         return ''.join(result)
 
     def get_tag(self, item):
         tags = item.select('.tag')
-        result = [self.get_words(tag.decode(), 1) for tag in tags]
+        result = [self.get_words(tag.decode()) for tag in tags]
         return result
 
     def get_addr(self, item):
         text = item.select('.addr')[0].decode()
-        result = self.get_words(text, 1)
+        result = self.get_words(text)
         return result
 
     def get_comment_list(self, item):
         spans = item.select('.comment-list span')
         result = {
-            span.contents[0]: self.get_words(span.contents[1].decode(), 1)
+            span.contents[0]: self.get_words(span.contents[1].decode())
             for span in spans
         }
         return result
@@ -210,17 +212,18 @@ class Dianping:
                         break
                 return texts[int(x) // 12]
         except KeyError as e:
-            logger.warning(e)
+            self.logger.warning(e)
             css_html = self.get_css(self.html)
             if css_html:
                 self.parse_css(css_html)
             return self.compute_offsets(val)
 
-    def get_words(self, text, mod):
+    def get_words(self, text):
         try:
             result = []
-            class_name = 'address' if mod else 'shopNum'
-            if rf'class="{class_name}"' in text:
+            class_names = ['address', 'shopNum', 'tagName']
+            flag = any([rf'class="{class_name}"' in text for class_name in class_names])
+            if flag:
                 match = re.findall(r'>(\S+?)<', text)
                 match = [repr(val).strip('\'') for val in match]
                 result = [
@@ -250,8 +253,8 @@ class Dianping:
 
 if __name__ == '__main__':
     dianping = Dianping()
-    url = 'http://www.dianping.com/nanjing/ch10/g110p'
-    urls = [url + str(i) for i in range(1, 51)]
+    url = 'http://www.dianping.com/beijing/ch30/g2754p'
+    urls = [url + str(i) for i in range(1, 23)]
     pool = Pool(4)
     pool.map(dianping.get_page, urls)
     pool.close()
