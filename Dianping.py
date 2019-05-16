@@ -248,7 +248,7 @@ class Dianping:
                 return True
         except Exception as e:
             self.logger.warning(e)
-            return Flase
+            return False
 
 
 if __name__ == '__main__':
