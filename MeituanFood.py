@@ -65,12 +65,12 @@ class Token:
 
 
 class MeituanFood:
-    def __init__(self, cityName='', page=None, originUrl=''):
+    def __init__(self, cityName='', cateId=None, page=None, originUrl=''):
         self.logger = logging.getLogger(__name__)
         self.query = dict()
         self.query.update({
             'cityName': cityName,
-            'cateId': 0,
+            'cateId': cateId,
             'areaId': 0,
             'sort': '',
             'dinnerCountAttrId': '',
@@ -105,11 +105,11 @@ class MeituanFood:
                 return response.text
             else:
                 self.logger.info('Canot get page')
-                return self.get_page()
+                return self.get_page(url)
         except RequestException:
             self.logger.warning('Cannot get page')
             time.sleep(1)
-            return self.get_page()
+            return self.get_page(url)
 
     def parse_page(self, html):
         content = json.loads(html)
@@ -118,7 +118,7 @@ class MeituanFood:
             print(poinInfo.get('title'))
 
 def main():
-    meituan = MeituanFood('北京', 1, 'http://bj.meituan.com/meishi/')
+    meituan = MeituanFood('北京', 1, 0, 'http://bj.meituan.com/meishi/')
     html = meituan.get_page('http://bj.meituan.com/meishi/api/poi/getPoiList')
     meituan.parse_page(html)
 
