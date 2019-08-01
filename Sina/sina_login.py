@@ -96,6 +96,7 @@ class SinaLogin:
 
 
 if __name__ == "__main__":
+    pass
     # sina = SinaLogin()
     # usernmae = ''
     # password = '' 
